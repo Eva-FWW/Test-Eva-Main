@@ -8,48 +8,36 @@ import com.pengrad.telegrambot.request.SendMessage;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 
 public class Main {
     public static final String BOT_TOKEN = "7057508771:AAF_9O1V-KbkxyWhZiEvxyagWPTVXMNrIRo";
     public static TelegramBot telegramBot = new TelegramBot(BOT_TOKEN);
     private static final Set<Long> newUsersChatIds = new HashSet<>();
-    // Переменная для отслеживания идентификаторов чатов новых пользователей
 
     public static void main(String[] args) {
-        // Устанавливаем обработчик обновлений
-        telegramBot.setUpdatesListener(updates -> {
-            // Проходимся по каждому обновлению
-            for (Update update : updates) {
-                // Получаем сообщение из обновления
-                Message message = update.message();
-                // Проверяем, является ли это первым сообщением нового пользователя
-                if (message != null && isNewUser(message)) {
-                    // Отправляем приветственное сообщение
-                    sendWelcomeMessage(telegramBot, message);
+        telegramBot.setUpdatesListener(new UpdatesListener() {
+            @Override
+            public int process(List<Update> updates) {
+                for (Update update : updates) {
+                    Message message = update.message();
+                    if (message != null && isNewUser(message)) {
+                        sendWelcomeMessage(telegramBot, message);
+                    }
                 }
+                return UpdatesListener.CONFIRMED_UPDATES_ALL;
             }
-            // Возвращаемое значение (CONFIRMED_UPDATES_ALL) указывает, что все обновления успешно обработаны
-            return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
     }
 
-    // Метод для проверки, является ли пользователь новым
     public static boolean isNewUser(Message message) {
-        // Получаем идентификатор чата
         Long chatId = message.chat().id();
-        // Если идентификатор чата уже есть в списке чатов новых пользователей, значит это не первое обращение пользователя
         return !newUsersChatIds.contains(chatId);
     }
 
-    // Метод для отправки приветственного сообщения
     public static void sendWelcomeMessage(TelegramBot telegramBot, Message message) {
-        // Получаем идентификатор чата
         Long chatId = message.chat().id();
-
-        // Отправляем приветственное сообщение
         telegramBot.execute(new SendMessage(chatId, "Привет!"));
-
-        // Добавляем идентификатор чата в список чатов новых пользователей
         newUsersChatIds.add(chatId);
     }
 }
